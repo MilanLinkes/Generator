@@ -8,7 +8,7 @@
 
 int main(int argc, char* argv[]){
 	unsigned char c;
-	int identity, file_size, file_pointer, i, j, pocet_float = 0, n=0;
+	int identity, file_size, file_pointer, i, j, n=0;
 
 	  if(argc!=2){
 	   	printf("Zadal si nespravny pocet argumentov\n");
