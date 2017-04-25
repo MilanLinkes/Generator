@@ -21,7 +21,7 @@ void plnka(int identita, int n){
 }
 
 int main(int argc, char* argv[]){
-    int identity, pisanie, n;
+    int identity, pisanie, n, cl;
     
    	n=atoi(argv[2]);
 	srand(time(0));
@@ -32,8 +32,18 @@ int main(int argc, char* argv[]){
 	}
 	
 	identity = open(argv[1],  O_WRONLY | O_BINARY | O_CREAT, S_IWUSR);
-
+		
+	if(identity >= 0){
+		printf("subor sa otvoril\n");
+	} 
+	else{
+		printf("subor sa neotvoril. skus to znova\n");
+		return 0;
+	}
+	
 	plnka(identity,n);
-      
+	
+    cl = close(identity);
+    
     return 0;
 }
