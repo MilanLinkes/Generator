@@ -7,7 +7,9 @@
 
 int main(int argc, char* argv[]) {
 	unsigned char c;
-	int identity, file_size, file_pointer, i, j, n = 0;
+	int identity, file_size, file_pointer, i, j, n = 0, *pole_charov;
+	unsigned char pocet_v_post;
+	float **pole_floatov, *avg, avg_1 = 0, hodnota;
 
 	if (argc != 2) {
 		printf("Zadal si nespravny pocet argumentov\n");
@@ -25,7 +27,11 @@ int main(int argc, char* argv[]) {
 	file_pointer = lseek(identity, 0, SEEK_SET);
 
 	do {
-		read(identity, &c, sizeof(unsigned char));
+		if(read(identity, &c, sizeof(unsigned char))==-1){
+			printf("Subor sa nepodarilo precitat\n");
+			return 0;	
+		}
+		
 		file_pointer = lseek(identity, (int)c*(sizeof(float)), SEEK_CUR);
 		n++;
 
@@ -34,28 +40,50 @@ int main(int argc, char* argv[]) {
 	lseek(identity, 0, SEEK_SET);
 	printf("\nPocet postupnosti: %d\n", n);
 
-	float *pole_floatov[n][20];
-	unsigned char *pole_charov[n];
-	float avg[n], avg_1 = 0;
-
+	pole_floatov = malloc(n*sizeof(float*));
+	pole_charov = malloc(n*sizeof(int));
+    avg = malloc(n*sizeof(float));
+    
+	if (pole_floatov== NULL) {
+		printf("Nezdarena allokacia pamate.\n");
+		return 0;
+	}
+		
+	if (pole_charov == NULL) {
+		printf("Nezdarena allokacia pamate.\n");
+		return 0;
+	}
+		
+	if (avg == NULL) {
+		printf("Nezdarena allokacia pamate.\n");
+		return 0;
+	}
+	
 	for (i = 0; i < n; i++) {
+		if (read(identity, &pocet_v_post, sizeof(unsigned char))==-1){
+			printf("Subor sa nepodarilo precitat\n");
+			return 0;
+		}
+		
+		pole_charov[i]=pocet_v_post;
+		pole_floatov[i] = malloc(pole_charov[i]*sizeof(float));
 
-		pole_charov[i] = (unsigned char *)malloc(sizeof(unsigned char));
-		read(identity, pole_charov[i], sizeof(unsigned char));
-
-			for (j = 0;j < (int)*pole_charov[i];j++) {
-				
-				pole_floatov[i][j] = (float*)malloc(sizeof(float));
-				
-				if (pole_floatov[i][j]== NULL) {
-					printf("Nezdarena allokacia pamate.\n");
+		if (pole_floatov[i]== NULL) {
+			printf("Nezdarena allokacia pamate.\n");
+			return 0;
+		}
+		
+		for (j = 0;j<pole_charov[i];j++) {
+				if(read(identity, &hodnota, sizeof(float))==-1){
+					printf("Subor sa nepodarilo precitat\n");
 					return 0;
 				}
-					read(identity, pole_floatov[i][j], sizeof(float));
-					avg_1 += *pole_floatov[i][j];
+				
+				pole_floatov[i][j]=hodnota;
+				avg_1 += pole_floatov[i][j];
 			}
 
-		avg[i] = avg_1 / (*pole_charov[i]);
+		avg[i] = avg_1 / (pole_charov[i]);
 		avg_1 = 0;
 		printf("Priemer %d. postup. : %f\n", i + 1, avg[i]);
 	}
@@ -67,17 +95,20 @@ int main(int argc, char* argv[]) {
 	avg_1 = avg_1 / n;
 	printf("Priemer priemerov postup. : %f\n\n", avg_1);
 
-	for (i = 0;i < n;i++) {
+	for (i = 0;i<n;i++) {
 
-		for (j = 0; j < (int)*pole_charov[i]; j++) {
-			printf("%f ", *pole_floatov[i][j]);
+		for (j = 0; j < (int)pole_charov[i]; j++) {
+			printf("%f ", pole_floatov[i][j]);
 		}
 		printf(" \n");
 	}
-
+	
+	for(i=0; i<n; i++){
+		free(pole_floatov[i]);
+	}
+	free(*pole_floatov);
 	free(pole_charov);
-	free(pole_floatov);
-
+	
 	if (close(identity) == -1) {
 		printf("Subor sa nepodarilo zavriet.\n");
 		return 0;
